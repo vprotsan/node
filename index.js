@@ -66,6 +66,30 @@
 // console.log('End first tick')
 
 //Both promises and callbacks can be handles within node
+// let delay = (seconds, callback) => {
+//   if (seconds > 3){
+//     callback(new Error(`${seconds} is too long`))
+//   } else {
+//     setTimeout(()=>
+//       callback(null, `the ${seconds} delay is over`),
+//       seconds
+//     )
+//   }
+// }
+//
+// delay(4, (error, message) => {
+//   if (error){
+//     console.log(error.message)
+//   } else {
+//     console.log(message)
+//   }
+// })
+
+//Convert callback functions into promises:
+//promisify - is a callback function which can turn callbacks into promises
+const { promisify } = require('util');
+const fs = require('fs')  //file system module
+
 let delay = (seconds, callback) => {
   if (seconds > 3){
     callback(new Error(`${seconds} is too long`))
@@ -77,12 +101,21 @@ let delay = (seconds, callback) => {
   }
 }
 
-delay(4, (error, message) => {
-  if (error){
-    console.log(error.message)
-  } else {
-    console.log(message)
-  }
-})
+// delay(4, (error, message) => {
+//   if (error){
+//     console.log(error.message)
+//   } else {
+//     console.log(message)
+//   }
+// })
+//below we turned above function into promise
+// let promisDelay = promisify(delay)
+//
+// promisDelay(2)
+//   .then(console.log(`the delay is over`))
+//   .catch((error) => {new Error(`is too long`)})
 
-//Convert callback functions into promises:
+let writeFile = promisify(fs.writeFile)
+writeFile('sample.txt', 'test text')
+  .then(() => console.log('file successfully created'))
+  .catch((error) => console.log('error creating file'))
