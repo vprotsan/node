@@ -87,19 +87,19 @@
 
 //Convert callback functions into promises:
 //promisify - is a callback function which can turn callbacks into promises
-const { promisify } = require('util');
-const fs = require('fs')  //file system module
-
-let delay = (seconds, callback) => {
-  if (seconds > 3){
-    callback(new Error(`${seconds} is too long`))
-  } else {
-    setTimeout(()=>
-      callback(null, `the ${seconds} delay is over`),
-      seconds
-    )
-  }
-}
+// const { promisify } = require('util');
+// const fs = require('fs')  //file system module
+//
+// let delay = (seconds, callback) => {
+//   if (seconds > 3){
+//     callback(new Error(`${seconds} is too long`))
+//   } else {
+//     setTimeout(()=>
+//       callback(null, `the ${seconds} delay is over`),
+//       seconds
+//     )
+//   }
+// }
 
 // delay(4, (error, message) => {
 //   if (error){
@@ -115,7 +115,68 @@ let delay = (seconds, callback) => {
 //   .then(console.log(`the delay is over`))
 //   .catch((error) => {new Error(`is too long`)})
 
-let writeFile = promisify(fs.writeFile)
-writeFile('sample.txt', 'test text')
-  .then(() => console.log('file successfully created'))
-  .catch((error) => console.log('error creating file'))
+// let writeFile = promisify(fs.writeFile)
+// writeFile('sample.txt', 'test text')
+//   .then(() => console.log('file successfully created'))
+//   .catch((error) => console.log('error creating file'))
+
+
+
+
+var fs = require('fs');
+var beep = () => process.stdout.write("\x07");
+var { promisify } = require('util')
+var writeFile = promisify(fs.writeFile)
+var unlink = promisify(fs.unlink)
+var delay = (seconds) => new Promise((resolve) => {
+  setTimeout(resolve, seconds*1000)
+})
+
+// const doStuffSequentially = () => {
+//     console.log('starting');
+//     setTimeout(() => {
+//         console.log('waiting');
+//         setTimeout(() => {
+//             console.log('waiting some more');
+//             fs.writeFile('file.txt', 'Sample File...', error => {
+//                 if (error) {
+//                     console.error(error);
+//                 } else {
+//                     beep();
+//                     console.log('file.txt created')
+//                     setTimeout(() => {
+//                         beep();
+//                         fs.unlink('file.txt', error => {
+//                             if (error) {
+//                                 console.error(error);
+//                             } else {
+//                                 console.log('file.txt removed');
+//                                 console.log('sequential execution complete');
+//                             }
+//                         })
+//                     }, 3000)
+//                 }
+//             });
+//         }, 2000)
+//     }, 1000)
+// }
+// doStuffSequentially();
+
+const doStuffSequentially = () => Promise.resolve()
+  .then(() => console.log('starting'))
+  .then(() => delay(1))
+  .then(() => 'waiting')
+  .then(console.log)
+  .then(() => delay(2))
+  .then(() => 'waiting some more')
+  .then(console.log)
+  .then((result) => writeFile('file.txt', 'Sample file...'))
+  .then(beep)
+  .then(() => 'file.txt created')
+  .then(console.log)
+  .then(() => delay(3))
+  .then(beep)
+  .then(() => unlink('file.txt'))
+  .then(() => 'file.txt removed')
+  .then(console.log)
+  .catch(console.error)
