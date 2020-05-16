@@ -182,19 +182,122 @@ var delay = (seconds) => new Promise((resolve) => {
 //   .catch(console.error)
 
 
-const doStuffSequentially = async() => {
+const doStuffSequentially = async () => {
   console.log('starting')
   await delay(1)
   console.log('waiting')
   await delay(2)
   console.log('waiting some more')
-  await writeFile('file.txt', 'sample text...')
-  beep()
+  try {
+    await writeFile('file.txt', 'sample text...')
+    beep()
+  } catch(error) {
+    console.error(error)
+  }
   console.log('file.txt created')
   await delay(3)
   beep()
   await unlink('file.txt')
   console.log('file.txt was removed')
+
+  return Promise.resolve()
 }
 
-doStuffSequentially()
+// doStuffSequentially()
+//   .then()
+
+
+var readdir = promisify(fs.readdir)
+
+// readdir.then((files) => {
+//   console.log(files)
+// })
+
+// or
+
+// async function start(){
+//   let files = await readdir(__dirname)
+//   console.log(files)
+// }
+
+// start()
+
+//promise all returns a single promise one all are completed
+// Promise.all([
+//   writeFile('readme.md', 'read me text...'),
+//   writeFile('readme.txt', 'read me text...'),
+//   writeFile('readme.json', '{"hello": "world"}')
+// ]).then( () => { readdir(__dirname) })
+//   .then((e) => console.log(e))
+
+
+  // Promise.all([
+  //   unlink('readme.md'),
+  //   unlink('readme.txt'),
+  //   delay(1),
+  //   unlink('readme.json')
+  // ]).then( () => { readdir(__dirname) })
+  //   .then((result) => console.log(result))
+
+
+Promise.all([
+  delay(1),
+  delay(2),
+  delay(3)
+]).then( () => { readdir(__dirname) })
+  .then(console.log)
+
+var logUpdate = require('log-update')
+var toX = () => 'X'
+
+var task = [
+  delay(2),
+  delay(1),
+  delay(3),
+  delay(1),
+  delay(2),
+  delay(4)
+]
+
+
+class PromiseQueue{
+  constructor(promises=[], concurrent = 1){
+    this.concurrent = concurrent;
+    this.total = promises.length;
+    this.todo = promises
+    this.running = []
+    this.complete = []
+  }
+
+  get runAnother(){
+    return (this.running.length < this.concurrent) && this.todo.length;
+  }
+
+  graphTasks(){
+    let {todo, complete, running} = this;
+    logUpdate(`
+
+      todo: [${todo.map(toX)}],
+      running: [${running.map(toX)}],
+      complete: [${complete.map(toX)}]
+
+      `)
+  }
+
+  run (){
+    while(this.runAnother){
+      let promise = this.todo.shift();
+      promise.then(() => {
+        this.complete.push(this.running.shift())
+        this.graphTasks()
+        this.run()
+      })
+      this.running.push(promise)
+      this.graphTasks()
+    }
+  }
+}
+
+
+var delayQueue = new PromiseQueue(task, 2);
+delayQueue.run();
