@@ -7,11 +7,9 @@ const http = require('http')
 const file = 'powder-day.mp4';
 
 http.createServer((req, res) => {
-  fs.readFile(file,(error,data) => {
-    if (error){
-      console.log('mmm', error)
-    }
-    res.writeHeader(200, {'Content-Type': 'video/mp4'})
-    res.end(data)
-  })
+
+  res.writeHeader(200, {'Content-type' : 'video/mp4'})
+  fs.createReadStream(file)
+    .pipe(res)
+    .on('error', console.error)
 }).listen(3000, ()=> console.log('buffer - localhost:3000'))
